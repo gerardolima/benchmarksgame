@@ -10,7 +10,7 @@
 //
 //
 
-package main
+package _8
 
 import (
 	"context"
@@ -66,7 +66,7 @@ func inner(depth, iterations uint32) string {
 
 const minDepth = uint32(4)
 
-func Run8(n uint32) {
+func Run(n uint32) {
 	cpuCount := runtime.NumCPU()
 	sem := semaphore.NewWeighted(int64(cpuCount))
 

@@ -13,6 +13,7 @@
 package main
 
 import (
+	"benchmarksgame/binarytrees/_8"
 	"flag"
 	"strconv"
 )
@@ -24,5 +25,5 @@ func main() {
 		n, _ = strconv.Atoi(flag.Arg(0))
 	}
 
-	Run8(uint32(n))
+	_8.Run(uint32(n))
 }
