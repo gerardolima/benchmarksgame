@@ -14,47 +14,43 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"math"
 	"runtime"
 	"sort"
-	"strconv"
 
 	"golang.org/x/sync/semaphore"
 )
 
-type Tree struct {
-	Left  *Tree
-	Right *Tree
+type tree struct {
+	Left  *tree
+	Right *tree
 }
 
-type Message struct {
+type message struct {
 	Pos  uint32
 	Text string
 }
 
-var unity = uint32(1)
-
-type ByPos []Message
+type ByPos []message
 
 func (m ByPos) Len() int           { return len(m) }
 func (m ByPos) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 func (m ByPos) Less(i, j int) bool { return m[i].Pos < m[j].Pos }
 
-func itemCheck(tree *Tree) uint32 {
-	if tree.Left != nil && tree.Right != nil {
-		return uint32(1) + itemCheck(tree.Right) + itemCheck(tree.Left)
+func itemCheck(t *tree) uint32 {
+	if t.Left != nil && t.Right != nil {
+		return uint32(1) + itemCheck(t.Right) + itemCheck(t.Left)
 	}
 
 	return 1
 }
 
-func bottomUpTree(depth uint32) *Tree {
+func bottomUpTree(depth uint32) *tree {
 	if depth > uint32(0) {
-		return &Tree{Left: bottomUpTree(depth - 1), Right: bottomUpTree(depth - 1)}
+		return &tree{Left: bottomUpTree(depth - 1), Right: bottomUpTree(depth - 1)}
 	} else {
-		return &Tree{}
+		return &tree{}
 	}
 }
 
@@ -70,17 +66,7 @@ func inner(depth, iterations uint32) string {
 
 const minDepth = uint32(4)
 
-func main() {
-	n := 0
-	flag.Parse()
-	if flag.NArg() > 0 {
-		n, _ = strconv.Atoi(flag.Arg(0))
-	}
-
-	run(uint32(n))
-}
-
-func run(n uint32) {
+func Run8(n uint32) {
 	cpuCount := runtime.NumCPU()
 	sem := semaphore.NewWeighted(int64(cpuCount))
 
@@ -91,7 +77,7 @@ func run(n uint32) {
 
 	depth := maxDepth + 1
 
-	messages := make(chan Message, cpuCount)
+	messages := make(chan message, cpuCount)
 	expected := uint32(2) // initialize with the 2 summary messages
 
 	go func() {
@@ -100,7 +86,7 @@ func run(n uint32) {
 			go func() {
 				defer sem.Release(1)
 				tree := bottomUpTree(depth)
-				messages <- Message{0,
+				messages <- message{0,
 					fmt.Sprintf("stretch tree of depth %d\t check: %d",
 						depth, itemCheck(tree))}
 			}()
@@ -112,7 +98,7 @@ func run(n uint32) {
 			go func() {
 				defer sem.Release(1)
 				longLivedTree := bottomUpTree(maxDepth)
-				messages <- Message{math.MaxUint32,
+				messages <- message{math.MaxUint32,
 					fmt.Sprintf("long lived tree of depth %d\t check: %d",
 						maxDepth, itemCheck(longLivedTree))}
 			}()
@@ -129,7 +115,7 @@ func run(n uint32) {
 				if err := sem.Acquire(context.TODO(), 1); err == nil {
 					go func() {
 						defer sem.Release(1)
-						messages <- Message{d, inner(d, i)}
+						messages <- message{d, inner(d, i)}
 					}()
 				} else {
 					panic(err)
@@ -138,7 +124,7 @@ func run(n uint32) {
 		}
 	}()
 
-	var sortedMsg []Message
+	var sortedMsg []message
 	for m := range messages {
 		sortedMsg = append(sortedMsg, m)
 		expected--
@@ -152,6 +138,18 @@ func run(n uint32) {
 		fmt.Println(m.Text)
 	}
 }
+
+/*
+func main() {
+	n := 0
+	flag.Parse()
+	if flag.NArg() > 0 {
+		n, _ = strconv.Atoi(flag.Arg(0))
+	}
+
+	Run8(uint32(n))
+}
+*/
 
 // notes, command-line, and program output
 // NOTES:
