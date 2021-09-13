@@ -13,13 +13,10 @@
 package _8
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"runtime"
 	"sort"
-
-	"golang.org/x/sync/semaphore"
 )
 
 type tree struct {
@@ -68,7 +65,6 @@ const minDepth = uint32(4)
 
 func Run(n uint32) {
 	cpuCount := runtime.NumCPU()
-	sem := semaphore.NewWeighted(int64(cpuCount))
 
 	maxDepth := n
 	if minDepth+2 > n {
@@ -82,29 +78,20 @@ func Run(n uint32) {
 
 	go func() {
 		// do stretch tree and longLivedTree
-		if err := sem.Acquire(context.TODO(), 1); err == nil {
-			go func() {
-				defer sem.Release(1)
-				tree := bottomUpTree(depth)
-				messages <- message{0,
-					fmt.Sprintf("stretch tree of depth %d\t check: %d",
-						depth, itemCheck(tree))}
-			}()
-		} else {
-			panic(err)
-		}
 
-		if err := sem.Acquire(context.TODO(), 1); err == nil {
-			go func() {
-				defer sem.Release(1)
-				longLivedTree := bottomUpTree(maxDepth)
-				messages <- message{math.MaxUint32,
-					fmt.Sprintf("long lived tree of depth %d\t check: %d",
-						maxDepth, itemCheck(longLivedTree))}
-			}()
-		} else {
-			panic(err)
-		}
+		go func() {
+			tree := bottomUpTree(depth)
+			messages <- message{0,
+				fmt.Sprintf("stretch tree of depth %d\t check: %d",
+					depth, itemCheck(tree))}
+		}()
+
+		go func() {
+			longLivedTree := bottomUpTree(maxDepth)
+			messages <- message{math.MaxUint32,
+				fmt.Sprintf("long lived tree of depth %d\t check: %d",
+					maxDepth, itemCheck(longLivedTree))}
+		}()
 
 		for halfDepth := minDepth / 2; halfDepth < maxDepth/2+1; halfDepth++ {
 			depth := halfDepth * 2
@@ -112,14 +99,9 @@ func Run(n uint32) {
 			expected++
 
 			func(d, i uint32) {
-				if err := sem.Acquire(context.TODO(), 1); err == nil {
-					go func() {
-						defer sem.Release(1)
-						messages <- message{d, inner(d, i)}
-					}()
-				} else {
-					panic(err)
-				}
+				go func() {
+					messages <- message{d, inner(d, i)}
+				}()
 			}(depth, iterations)
 		}
 	}()
