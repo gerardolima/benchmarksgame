@@ -25,7 +25,7 @@ type tree struct {
 }
 
 type message struct {
-	Pos  uint32
+	Pos  int
 	Text string
 }
 
@@ -35,25 +35,25 @@ func (m ByPos) Len() int           { return len(m) }
 func (m ByPos) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 func (m ByPos) Less(i, j int) bool { return m[i].Pos < m[j].Pos }
 
-func itemCheck(t *tree) uint32 {
+func itemCheck(t *tree) int {
 	if t.Left != nil && t.Right != nil {
-		return uint32(1) + itemCheck(t.Right) + itemCheck(t.Left)
+		return 1 + itemCheck(t.Right) + itemCheck(t.Left)
 	}
 
 	return 1
 }
 
-func bottomUpTree(depth uint32) *tree {
-	if depth > uint32(0) {
+func bottomUpTree(depth int) *tree {
+	if depth > 0 {
 		return &tree{Left: bottomUpTree(depth - 1), Right: bottomUpTree(depth - 1)}
 	} else {
 		return &tree{}
 	}
 }
 
-func inner(depth, iterations uint32) string {
-	chk := uint32(0)
-	for i := uint32(0); i < iterations; i++ {
+func inner(depth, iterations int) string {
+	chk := 0
+	for i := 0; i < iterations; i++ {
 		a := bottomUpTree(depth)
 		chk += itemCheck(a)
 	}
@@ -61,9 +61,9 @@ func inner(depth, iterations uint32) string {
 		iterations, depth, chk)
 }
 
-const minDepth = uint32(4)
+const minDepth = 4
 
-func Run(n uint32) {
+func Run(n int) {
 	cpuCount := runtime.NumCPU()
 
 	maxDepth := n
@@ -74,7 +74,7 @@ func Run(n uint32) {
 	depth := maxDepth + 1
 
 	messages := make(chan message, cpuCount)
-	expected := uint32(2) // initialize with the 2 summary messages
+	expected := 2 // initialize with the 2 summary messages
 
 	go func() {
 		// do stretch tree and longLivedTree
@@ -88,17 +88,17 @@ func Run(n uint32) {
 
 		go func() {
 			longLivedTree := bottomUpTree(maxDepth)
-			messages <- message{math.MaxUint32,
+			messages <- message{math.MaxInt,
 				fmt.Sprintf("long lived tree of depth %d\t check: %d",
 					maxDepth, itemCheck(longLivedTree))}
 		}()
 
 		for halfDepth := minDepth / 2; halfDepth < maxDepth/2+1; halfDepth++ {
 			depth := halfDepth * 2
-			iterations := uint32(1 << (maxDepth - depth + minDepth))
+			iterations := 1 << (maxDepth - depth + minDepth)
 			expected++
 
-			func(d, i uint32) {
+			func(d, i int) {
 				go func() {
 					messages <- message{d, inner(d, i)}
 				}()
@@ -129,7 +129,7 @@ func main() {
 		n, _ = strconv.Atoi(flag.Arg(0))
 	}
 
-	Run8(uint32(n))
+	Run8(uint(n))
 }
 */
 
