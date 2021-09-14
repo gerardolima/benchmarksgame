@@ -50,19 +50,17 @@ func (m ByPos) Len() int           { return len(m) }
 func (m ByPos) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 func (m ByPos) Less(i, j int) bool { return m[i].Pos < m[j].Pos }
 
-const minDepth = 4
-
 func Run(maxDepth int) {
-	cpuCount := runtime.NumCPU()
 
+	messages := make(chan message, runtime.NumCPU())
+	expected := 2 // initialize with the 2 summary messages
+
+	const minDepth = 4
 	if maxDepth < minDepth+2 {
 		maxDepth = minDepth + 2
 	}
 
 	depth := maxDepth + 1
-
-	messages := make(chan message, cpuCount)
-	expected := 2 // initialize with the 2 summary messages
 
 	go func() {
 		tree := NewTree(depth)
