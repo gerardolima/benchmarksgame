@@ -67,18 +67,16 @@ func Run(maxDepth int) {
 	go func() {
 		defer wg.Done()
 		tree := NewTree(maxDepth + 1)
-		messages <- message{0,
-			fmt.Sprintf("stretch tree of depth %d\t check: %d",
-				maxDepth+1, tree.Count())}
+		m := fmt.Sprintf("stretch tree of depth %d\t check: %d", maxDepth+1, tree.Count())
+		messages <- message{0, m}
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		longLivedTree := NewTree(maxDepth)
-		messages <- message{math.MaxInt,
-			fmt.Sprintf("long lived tree of depth %d\t check: %d",
-				maxDepth, longLivedTree.Count())}
+		m := fmt.Sprintf("long lived tree of depth %d\t check: %d", maxDepth, longLivedTree.Count())
+		messages <- message{math.MaxInt, m}
 	}()
 
 	for depth := minDepth; depth <= maxDepth; depth += 2 {
