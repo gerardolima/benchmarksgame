@@ -56,7 +56,6 @@ func Run(maxDepth int) {
 	var wg sync.WaitGroup
 
 	messages := make(chan message, runtime.NumCPU())
-	expected := 2 // initialize with the 2 summary messages
 
 	const minDepth = 4
 	if maxDepth < minDepth+2 {
@@ -81,7 +80,6 @@ func Run(maxDepth int) {
 
 	for depth := minDepth; depth <= maxDepth; depth += 2 {
 		iterations := 1 << (maxDepth - depth + minDepth)
-		expected++
 
 		wg.Add(1)
 		go func(depth, iterations int) {
@@ -103,7 +101,6 @@ func Run(maxDepth int) {
 	var sortedMsg []message
 	for m := range messages {
 		sortedMsg = append(sortedMsg, m)
-		expected--
 	}
 
 	sort.Sort(ByPos(sortedMsg))
