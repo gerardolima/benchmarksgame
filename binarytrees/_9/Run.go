@@ -60,13 +60,11 @@ func Run(maxDepth int) {
 		maxDepth = minDepth + 2
 	}
 
-	depth := maxDepth + 1
-
 	go func() {
-		tree := NewTree(depth)
+		tree := NewTree(maxDepth + 1)
 		messages <- message{0,
 			fmt.Sprintf("stretch tree of depth %d\t check: %d",
-				depth, tree.Count())}
+				maxDepth+1, tree.Count())}
 	}()
 
 	go func() {
@@ -76,8 +74,7 @@ func Run(maxDepth int) {
 				maxDepth, longLivedTree.Count())}
 	}()
 
-	for halfDepth := minDepth / 2; halfDepth < maxDepth/2+1; halfDepth++ {
-		depth := halfDepth * 2
+	for depth := minDepth; depth <= maxDepth; depth += 2 {
 		iterations := 1 << (maxDepth - depth + minDepth)
 		expected++
 
@@ -91,7 +88,6 @@ func Run(maxDepth int) {
 
 			messages <- message{depth, m}
 		}(depth, iterations)
-
 	}
 
 	var sortedMsg []message
