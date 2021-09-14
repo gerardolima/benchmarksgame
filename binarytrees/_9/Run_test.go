@@ -14,6 +14,16 @@ package _9
 
 import "testing"
 
+func ExampleRun9() {
+	Run(9)
+	// Output:
+	// stretch tree of depth 10	 check: 2047
+	// 512	 trees of depth 4	 check: 15872
+	// 128	 trees of depth 6	 check: 16256
+	// 32	 trees of depth 8	 check: 16352
+	// long lived tree of depth 9	 check: 1023
+}
+
 func ExampleRun10() {
 	// expected output from
 	// https://benchmarksgame-team.pages.debian.net/benchmarksgame/download/binarytrees-output.txt
