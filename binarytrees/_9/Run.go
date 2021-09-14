@@ -17,6 +17,7 @@ import (
 	"math"
 	"runtime"
 	"sort"
+	"sync"
 )
 
 type Tree struct {
@@ -52,6 +53,8 @@ func (m ByPos) Less(i, j int) bool { return m[i].Pos < m[j].Pos }
 
 func Run(maxDepth int) {
 
+	var wg sync.WaitGroup
+
 	messages := make(chan message, runtime.NumCPU())
 	expected := 2 // initialize with the 2 summary messages
 
@@ -60,14 +63,18 @@ func Run(maxDepth int) {
 		maxDepth = minDepth + 2
 	}
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		tree := NewTree(maxDepth + 1)
 		messages <- message{0,
 			fmt.Sprintf("stretch tree of depth %d\t check: %d",
 				maxDepth+1, tree.Count())}
 	}()
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		longLivedTree := NewTree(maxDepth)
 		messages <- message{math.MaxInt,
 			fmt.Sprintf("long lived tree of depth %d\t check: %d",
@@ -78,7 +85,9 @@ func Run(maxDepth int) {
 		iterations := 1 << (maxDepth - depth + minDepth)
 		expected++
 
+		wg.Add(1)
 		go func(depth, iterations int) {
+			defer wg.Done()
 			chk := 0
 			for i := 0; i < iterations; i++ {
 				a := NewTree(depth)
@@ -90,13 +99,13 @@ func Run(maxDepth int) {
 		}(depth, iterations)
 	}
 
+	wg.Wait()
+	close(messages)
+
 	var sortedMsg []message
 	for m := range messages {
 		sortedMsg = append(sortedMsg, m)
 		expected--
-		if expected == 0 {
-			close(messages)
-		}
 	}
 
 	sort.Sort(ByPos(sortedMsg))
