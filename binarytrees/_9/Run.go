@@ -52,11 +52,10 @@ func (m ByPos) Less(i, j int) bool { return m[i].Pos < m[j].Pos }
 
 const minDepth = 4
 
-func Run(n int) {
+func Run(maxDepth int) {
 	cpuCount := runtime.NumCPU()
 
-	maxDepth := n
-	if minDepth+2 > n {
+	if maxDepth < minDepth+2 {
 		maxDepth = minDepth + 2
 	}
 
