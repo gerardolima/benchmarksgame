@@ -28,7 +28,7 @@ func ExampleRun10() {
 	// long lived tree of depth 10	 check: 2047
 }
 
-func ExampleRun21(b *testing.B) {
+func ExampleRun21() {
 	// expected output from
 	// https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-go-8.html
 
