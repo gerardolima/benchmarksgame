@@ -14,9 +14,6 @@ package _9
 
 import (
 	"fmt"
-	"math"
-	"runtime"
-	"sort"
 	"sync"
 )
 
@@ -40,34 +37,26 @@ func NewTree(depth int) *Tree {
 	}
 }
 
-type message struct {
-	Pos  int
-	Text string
-}
-
-type ByPos []message
-
-func (m ByPos) Len() int           { return len(m) }
-func (m ByPos) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
-func (m ByPos) Less(i, j int) bool { return m[i].Pos < m[j].Pos }
-
 func Run(maxDepth int) {
 
 	var wg sync.WaitGroup
-
-	messages := make(chan message, runtime.NumCPU())
 
 	const minDepth = 4
 	if maxDepth < minDepth+2 {
 		maxDepth = minDepth + 2
 	}
 
+	produced := 0
+	forests := 3 + (maxDepth-minDepth)/2
+	outputBuffer := make([]string, forests)
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		tree := NewTree(maxDepth + 1)
 		m := fmt.Sprintf("stretch tree of depth %d\t check: %d", maxDepth+1, tree.Count())
-		messages <- message{0, m}
+
+		outputBuffer[0] = m
 	}()
 
 	wg.Add(1)
@@ -75,14 +64,16 @@ func Run(maxDepth int) {
 		defer wg.Done()
 		longLivedTree := NewTree(maxDepth)
 		m := fmt.Sprintf("long lived tree of depth %d\t check: %d", maxDepth, longLivedTree.Count())
-		messages <- message{math.MaxInt, m}
+
+		outputBuffer[forests-1] = m
 	}()
 
 	for depth := minDepth; depth <= maxDepth; depth += 2 {
 		iterations := 1 << (maxDepth - depth + minDepth)
+		produced++
 
 		wg.Add(1)
-		go func(depth, iterations int) {
+		go func(depth, iterations, index int) {
 			defer wg.Done()
 			chk := 0
 			for i := 0; i < iterations; i++ {
@@ -91,21 +82,14 @@ func Run(maxDepth int) {
 			}
 			m := fmt.Sprintf("%d\t trees of depth %d\t check: %d", iterations, depth, chk)
 
-			messages <- message{depth, m}
-		}(depth, iterations)
+			outputBuffer[index] = m
+		}(depth, iterations, produced)
 	}
 
 	wg.Wait()
-	close(messages)
 
-	var sortedMsg []message
-	for m := range messages {
-		sortedMsg = append(sortedMsg, m)
-	}
-
-	sort.Sort(ByPos(sortedMsg))
-	for _, m := range sortedMsg {
-		fmt.Println(m.Text)
+	for _, m := range outputBuffer {
+		fmt.Println(m)
 	}
 }
 
