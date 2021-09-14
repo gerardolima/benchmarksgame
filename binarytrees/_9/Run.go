@@ -50,16 +50,6 @@ func (m ByPos) Len() int           { return len(m) }
 func (m ByPos) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 func (m ByPos) Less(i, j int) bool { return m[i].Pos < m[j].Pos }
 
-func inner(depth, iterations int) string {
-	chk := 0
-	for i := 0; i < iterations; i++ {
-		a := NewTree(depth)
-		chk += a.Count()
-	}
-	return fmt.Sprintf("%d\t trees of depth %d\t check: %d",
-		iterations, depth, chk)
-}
-
 const minDepth = 4
 
 func Run(n int) {
@@ -97,11 +87,17 @@ func Run(n int) {
 			iterations := 1 << (maxDepth - depth + minDepth)
 			expected++
 
-			func(d, i int) {
-				go func() {
-					messages <- message{d, inner(d, i)}
-				}()
+			go func(depth, iterations int) {
+				chk := 0
+				for i := 0; i < iterations; i++ {
+					a := NewTree(depth)
+					chk += a.Count()
+				}
+				m := fmt.Sprintf("%d\t trees of depth %d\t check: %d", iterations, depth, chk)
+
+				messages <- message{depth, m}
 			}(depth, iterations)
+
 		}
 	}()
 
