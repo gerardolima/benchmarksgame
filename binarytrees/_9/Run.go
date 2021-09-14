@@ -19,9 +19,24 @@ import (
 	"sort"
 )
 
-type tree struct {
-	Left  *tree
-	Right *tree
+type Tree struct {
+	Left  *Tree
+	Right *Tree
+}
+
+func (t *Tree) Count() int {
+	if t.Left != nil {
+		return 1 + t.Right.Count() + t.Left.Count()
+	}
+	return 1
+}
+
+func NewTree(depth int) *Tree {
+	if depth > 0 {
+		return &Tree{Left: NewTree(depth - 1), Right: NewTree(depth - 1)}
+	} else {
+		return &Tree{}
+	}
 }
 
 type message struct {
@@ -35,27 +50,11 @@ func (m ByPos) Len() int           { return len(m) }
 func (m ByPos) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 func (m ByPos) Less(i, j int) bool { return m[i].Pos < m[j].Pos }
 
-func itemCheck(t *tree) int {
-	if t.Left != nil && t.Right != nil {
-		return 1 + itemCheck(t.Right) + itemCheck(t.Left)
-	}
-
-	return 1
-}
-
-func bottomUpTree(depth int) *tree {
-	if depth > 0 {
-		return &tree{Left: bottomUpTree(depth - 1), Right: bottomUpTree(depth - 1)}
-	} else {
-		return &tree{}
-	}
-}
-
 func inner(depth, iterations int) string {
 	chk := 0
 	for i := 0; i < iterations; i++ {
-		a := bottomUpTree(depth)
-		chk += itemCheck(a)
+		a := NewTree(depth)
+		chk += a.Count()
 	}
 	return fmt.Sprintf("%d\t trees of depth %d\t check: %d",
 		iterations, depth, chk)
@@ -80,17 +79,17 @@ func Run(n int) {
 		// do stretch tree and longLivedTree
 
 		go func() {
-			tree := bottomUpTree(depth)
+			tree := NewTree(depth)
 			messages <- message{0,
 				fmt.Sprintf("stretch tree of depth %d\t check: %d",
-					depth, itemCheck(tree))}
+					depth, tree.Count())}
 		}()
 
 		go func() {
-			longLivedTree := bottomUpTree(maxDepth)
+			longLivedTree := NewTree(maxDepth)
 			messages <- message{math.MaxInt,
 				fmt.Sprintf("long lived tree of depth %d\t check: %d",
-					maxDepth, itemCheck(longLivedTree))}
+					maxDepth, longLivedTree.Count())}
 		}()
 
 		for halfDepth := minDepth / 2; halfDepth < maxDepth/2+1; halfDepth++ {
