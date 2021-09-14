@@ -66,11 +66,11 @@ func Run(maxDepth int) {
 	// first position of the outputBuffer with its statistics.
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		tree := NewTree(maxDepth + 1)
 		m := fmt.Sprintf("stretch tree of depth %d\t check: %d", maxDepth+1, tree.Count())
 
 		outputBuffer[0] = m
+		wg.Done()
 	}()
 
 	// Create a long-lived binary tree of depth maxDepth. Its statistics will be
@@ -78,8 +78,8 @@ func Run(maxDepth int) {
 	var longLivedTree *Tree
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		longLivedTree = NewTree(maxDepth)
+		wg.Done()
 	}()
 
 	// Create a lot of binary trees, of depths ranging from minDepth to maxDepth,
@@ -90,7 +90,6 @@ func Run(maxDepth int) {
 
 		wg.Add(1)
 		go func(depth, iterations, index int) {
-			defer wg.Done()
 			chk := 0
 			for i := 0; i < iterations; i++ {
 				// Create a binary tree of depth and accumulate total counter with its
@@ -101,6 +100,7 @@ func Run(maxDepth int) {
 			m := fmt.Sprintf("%d\t trees of depth %d\t check: %d", iterations, depth, chk)
 
 			outputBuffer[index] = m
+			wg.Done()
 		}(depth, iterations, produced)
 	}
 
