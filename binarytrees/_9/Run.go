@@ -59,13 +59,11 @@ func Run(maxDepth int) {
 		outputBuffer[0] = m
 	}()
 
+	var longLivedTree *Tree
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		longLivedTree := NewTree(maxDepth)
-		m := fmt.Sprintf("long lived tree of depth %d\t check: %d", maxDepth, longLivedTree.Count())
-
-		outputBuffer[forests-1] = m
+		longLivedTree = NewTree(maxDepth)
 	}()
 
 	for depth := minDepth; depth <= maxDepth; depth += 2 {
@@ -87,6 +85,9 @@ func Run(maxDepth int) {
 	}
 
 	wg.Wait()
+
+	m := fmt.Sprintf("long lived tree of depth %d\t check: %d", maxDepth, longLivedTree.Count())
+	outputBuffer[forests-1] = m
 
 	for _, m := range outputBuffer {
 		fmt.Println(m)
