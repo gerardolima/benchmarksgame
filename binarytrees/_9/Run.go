@@ -1,13 +1,18 @@
 // The Computer Language Benchmarks Game
 // http://benchmarksgame.alioth.debian.org/
 //
-// Go adaptation of binary-trees Rust #4 program
-// Use semaphores to match the number of workers with the CPU count
+// Go implementation of binary-trees, based on the reference implementation
+// gcc #3, on Go #8 (which is based on Rust #4) as the following links, below:
+// - https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-gcc-3.html
+// - https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-go-8.html
+// - https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-rust-4.html
 //
-// contributed by Marcel Ibes
-// modified by Isaac Gouy
-// modified by Adam Shaver(use the struct constructor for bottomUpTree)
+// Comments on code aimed to be analogous as those in the reference implementation.
 //
+// Contributed by Gerardo Lima (https://github.com/gerardolima)
+// Based on previous work from Adam Shaver, Isaac Gouy, Marcel Ibes, Jeremy
+//  Zerfas, Jon Harrop, Alex Mizrahi, Bruno Coutinho, Volodymyr M. Lisivka, Tom
+//  Kaitchuck, Matt Brubeck, Cristi Cobzarenco, ...
 //
 
 package _9
@@ -22,13 +27,19 @@ type Tree struct {
 	Right *Tree
 }
 
+// Count the nodes in the given complete binary tree `tree`.
 func (t *Tree) Count() int {
+
+	// As `tree` is expected to be complete, only test it's left side to check
+	// whether is a leaf-node. Current implementation is recursive = current node
+	// + count of its left side + count of its right side.
 	if t.Left != nil {
 		return 1 + t.Right.Count() + t.Left.Count()
 	}
 	return 1
 }
 
+// Create a complete binary tree of `depth` and return it as a pointer.
 func NewTree(depth int) *Tree {
 	if depth > 0 {
 		return &Tree{Left: NewTree(depth - 1), Right: NewTree(depth - 1)}
@@ -41,6 +52,7 @@ func Run(maxDepth int) {
 
 	var wg sync.WaitGroup
 
+	// Set minDepth to 4 and maxDepth to the maximum of maxDepth and minDepth +2.
 	const minDepth = 4
 	if maxDepth < minDepth+2 {
 		maxDepth = minDepth + 2
@@ -50,6 +62,8 @@ func Run(maxDepth int) {
 	forests := 3 + (maxDepth-minDepth)/2
 	outputBuffer := make([]string, forests)
 
+	// Create binary tree of depth maxDepth+1, compute its Count and set the
+	// first position of the outputBuffer with its statistics.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -59,6 +73,8 @@ func Run(maxDepth int) {
 		outputBuffer[0] = m
 	}()
 
+	// Create a long-lived binary tree of depth maxDepth. Its statistics will be
+	// handled later.
 	var longLivedTree *Tree
 	wg.Add(1)
 	go func() {
@@ -66,6 +82,8 @@ func Run(maxDepth int) {
 		longLivedTree = NewTree(maxDepth)
 	}()
 
+	// Create a lot of binary trees, of depths ranging from minDepth to maxDepth,
+	// compute and tally up all their Count and record the statistics.
 	for depth := minDepth; depth <= maxDepth; depth += 2 {
 		iterations := 1 << (maxDepth - depth + minDepth)
 		produced++
@@ -75,6 +93,8 @@ func Run(maxDepth int) {
 			defer wg.Done()
 			chk := 0
 			for i := 0; i < iterations; i++ {
+				// Create a binary tree of depth and accumulate total counter with its
+				// node count.
 				a := NewTree(depth)
 				chk += a.Count()
 			}
@@ -86,9 +106,12 @@ func Run(maxDepth int) {
 
 	wg.Wait()
 
+	// Compute the checksum of the long-lived binary tree that we created
+	// earlier and store its statistics.
 	m := fmt.Sprintf("long lived tree of depth %d\t check: %d", maxDepth, longLivedTree.Count())
 	outputBuffer[forests-1] = m
 
+	// Print the statistics for all of the various tree depths.
 	for _, m := range outputBuffer {
 		fmt.Println(m)
 	}
@@ -102,7 +125,7 @@ func main() {
 		n, _ = strconv.Atoi(flag.Arg(0))
 	}
 
-	Run8(uint(n))
+	Run(n)
 }
 */
 
