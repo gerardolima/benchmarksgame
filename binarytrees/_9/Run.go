@@ -52,12 +52,12 @@ type Tree struct {
 }
 
 // Count the nodes in the given complete binary tree.
-func (t *Tree) Count() int {
+func CountNodes(t *Tree) int {
 	// Only test the Left node (this binary tree is expected to be complete).
 	if t.Left == nil {
 		return 1
 	}
-	return 1 + t.Right.Count() + t.Left.Count()
+	return 1 + CountNodes(t.Right) + CountNodes(t.Left)
 }
 
 // Create a complete binary tree of `depth` and return it as a pointer.
@@ -91,7 +91,7 @@ func Run(maxDepth int) {
 		tree := NewTree(maxDepth + 1)
 		msg := fmt.Sprintf("stretch tree of depth %d\t check: %d",
 			maxDepth+1,
-			tree.Count())
+			CountNodes(tree))
 
 		outBuff[0] = msg
 		wg.Done()
@@ -119,7 +119,7 @@ func Run(maxDepth int) {
 				// Create a binary tree of depth and accumulate total counter with its
 				// node count.
 				a := NewTree(depth)
-				acc += a.Count()
+				acc += CountNodes(a)
 			}
 			msg := fmt.Sprintf("%d\t trees of depth %d\t check: %d",
 				iterations,
@@ -137,7 +137,7 @@ func Run(maxDepth int) {
 	// earlier and store its statistics.
 	msg := fmt.Sprintf("long lived tree of depth %d\t check: %d",
 		maxDepth,
-		longLivedTree.Count())
+		CountNodes(longLivedTree))
 	outBuff[outSize-1] = msg
 
 	// Print the statistics for all of the various tree depths.
