@@ -1,1 +1,5 @@
 .vscode
+.DS_Store
+*.go_run
+*.test
+*.prof
