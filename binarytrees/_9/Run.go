@@ -51,6 +51,10 @@ type Tree struct {
 	Right *Tree
 }
 
+func NewNode() *Tree {
+	return new(Tree)
+}
+
 // Count the nodes in the given complete binary tree.
 func CountNodes(t *Tree) int {
 	// Only test the Left node (this binary tree is expected to be complete).
@@ -62,11 +66,12 @@ func CountNodes(t *Tree) int {
 
 // Create a complete binary tree of `depth` and return it as a pointer.
 func NewTree(depth int) *Tree {
+	t := NewNode()
 	if depth > 0 {
-		return &Tree{Left: NewTree(depth - 1), Right: NewTree(depth - 1)}
-	} else {
-		return &Tree{}
+		t.Left = NewTree(depth - 1)
+		t.Right = NewTree(depth - 1)
 	}
+	return t
 }
 
 func Run(maxDepth int) {
@@ -114,13 +119,21 @@ func Run(maxDepth int) {
 
 		wg.Add(1)
 		go func(depth, iterations, index int) {
-			acc := 0
+
+			ch := make(chan int, iterations)
 			for i := 0; i < iterations; i++ {
 				// Create a binary tree of depth and accumulate total counter with its
 				// node count.
 				a := NewTree(depth)
-				acc += CountNodes(a)
+				ch <- CountNodes(a)
 			}
+			close(ch)
+
+			acc := 0
+			for cc := range ch {
+				acc += cc
+			}
+
 			msg := fmt.Sprintf("%d\t trees of depth %d\t check: %d",
 				iterations,
 				depth,
