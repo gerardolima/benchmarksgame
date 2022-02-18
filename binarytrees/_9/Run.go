@@ -51,8 +51,14 @@ type Tree struct {
 	Right *Tree
 }
 
+var pool = sync.Pool{
+	New: func() interface{} {
+		return new(Tree)
+	},
+}
+
 func NewNode() *Tree {
-	return new(Tree)
+	return pool.Get().(*Tree)
 }
 
 // Count the nodes in the given complete binary tree.
