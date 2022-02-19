@@ -61,13 +61,20 @@ func NewNode() *Tree {
 	return pool.Get().(*Tree)
 }
 
+func FreeNode(t *Tree) {
+	pool.Put(t)
+}
+
 // Count the nodes in the given complete binary tree.
 func CountNodes(t *Tree) int {
+	count := 1
+
 	// Only test the Left node (this binary tree is expected to be complete).
-	if t.Left == nil {
-		return 1
+	if t.Left != nil {
+		count += CountNodes(t.Right) + CountNodes(t.Left)
 	}
-	return 1 + CountNodes(t.Right) + CountNodes(t.Left)
+	FreeNode(t)
+	return count
 }
 
 // Create a complete binary tree of `depth` and return it as a pointer.
